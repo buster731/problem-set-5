@@ -127,7 +127,7 @@ The `ATM` class is responsible for managing the interaction between the customer
    - Transfer funds
    - View balance
    - View personal information
-   - Update personal infromation
+   - Update personal information
    - Close account
    - Logout
 * Respond accordingly to each of the menu options.

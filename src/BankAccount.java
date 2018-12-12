@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 /**
  * Just like last time, the BankAccount class is primarily responsible
  * for depositing and withdrawing money. In the enhanced version, there
@@ -22,7 +24,7 @@ The `BankAccount` class should have the ability to deposit and withdraw money, a
 
 public class BankAccount {
 		
-	private static long generatedAccountNumber = 100000001L;
+	private static long generatedAccountNumber = 99000001L;
 		
 	private long accountNumber;
 	private double balance;
@@ -30,11 +32,11 @@ public class BankAccount {
 	private Database db;
 	
 	public BankAccount(String account) {
-		this.accountNumber = parseAcctNum();
-		this.balance = parseBal();
-		this.accntHolder = new AccntHolder(parsePin(), parseFName(), parseLName(), parseDateOB(), parsePNum(), parseAddy(), parseCity(), parseState(), parseZip());
+		this.accountNumber = parseAcctNum(account);
+		this.balance = parseBal(account);
+		this.accntHolder = new AccntHolder(parsePin(account), parseFName(account), parseLName(account), parseDateOB(account), parsePNum(account), parseAddy(account), parseCity(account), parseState(account), parseZip(account));
 	}
-		
+	
 	public double getBalance() {
 		return balance;
 	}
@@ -48,100 +50,96 @@ public class BankAccount {
 	}
 		
 	public void setAccountNumber(long accountNumber) {
-		this.accountNumber = db.getAccount(accountNumber).parseAcctNum();
+		System.out.println("gets this far (setAccountNum)");
+		this.accountNumber = accountNumber;
 	}
 		
 	public void setBalance(double balance) {
-		this.balance = db.getAccount(accountNumber).parseBal();
+		this.balance = balance;
 	}
 		
 	public void setAcctHolder(AccntHolder accntHolder) {
 		this.accntHolder = accntHolder;
 	}
 
-	public long parseAcctNum() {
-		String AcctNum = db.getAccount(accountNumber).toString().substring(0,10);
+	public long parseAcctNum(String account) {
+		String AcctNum = account.substring(0,9);
 		long AccntNum = Long.parseLong(AcctNum);
 		return AccntNum;
 	}
 	
-	public String parsePin() {
-		String Pin = db.getAccount(accountNumber).toString().substring(10,14);
+	public int parsePin(String account) {
+		String Pin1 = account.substring(9,13);
+		int Pin = Integer.parseInt(Pin1);
 		return Pin;
 	}
 	
-	public double parseBal() {
+	public double parseBal(String account) {
 		
-		double balance = Double.parseDouble(db.getAccount(accountNumber).toString().substring(14,28));
+		double balance = Double.parseDouble(account.substring(13,28));
 		return balance;
 	}
 	
-	public String parseLName() {
+	public String parseLName(String account) {
 		
-		String LastN= db.getAccount(accountNumber).toString().substring(28, 48);
+		String LastN= account.substring(28, 48);
 		return LastN;
 	}
 	
-	public String parseFName() {
+	public String parseFName(String account) {
 		
-		String FirstN= db.getAccount(accountNumber).toString().substring(48, 63);
+		String FirstN= account.substring(48, 63);
 		return FirstN;
 	}
 	
-	public String parseDateOB() {
+	public String parseDateOB(String account) {
 		
-		String DateOB= db.getAccount(accountNumber).toString().substring(63, 71);
+		String DateOB= account.substring(63, 71);
 		return DateOB;
 	}
 	
-	public String parsePNum() {
+	public String parsePNum(String account) {
 		
-		String PNum= db.getAccount(accountNumber).toString().substring(71, 81);
+		String PNum= account.substring(71, 81);
 		return PNum;
 	}
 	
-	public String parseAddy() {
+	public String parseAddy(String account) {
 		
-		String Addy= db.getAccount(accountNumber).toString().substring(81, 101);
+		String Addy= account.substring(81, 111);
 		return Addy;
 	}
 	
-	public String parseCity() {
+	public String parseCity(String account) {
 		
-		String City= db.getAccount(accountNumber).toString().substring(101, 131);
+		String City= account.substring(111, 141);
 		return City;
 	}
 
-	public String parseState() {
+	public String parseState(String account) {
 		
-		String State= db.getAccount(accountNumber).toString().substring(131, 133);
+		String State= account.substring(141, 143);
 		return State;
 	}
 
-	public String parseZip() {
+	public String parseZip(String account) {
 		
-		String Zip= db.getAccount(accountNumber).toString().substring(133,138);
+		String Zip= account.substring(143,148);
 		return Zip;
 	}
-	
-	public boolean parseActive() {
-		if(db.getAccount(accountNumber).toString().substring(138,139) == "Y") {
-			return true;
-		}
-		return false;
-	}
 
-	public int deposit(double depositVal) {
+	public int deposit(double depositVal) throws IOException {
 		if(depositVal < -1) {
 			return 0;
 		}
 		else {
 			this.balance = balance + depositVal;
+			db.updateAccount(db.getAccount(accountNumber), null);
 			return 1;
 		}
 	}
 		
-	public int withdraw(double withdrawVal) {
+	public int withdraw(double withdrawVal) throws IOException {
 		if(withdrawVal < -1) {
 			return 0;
 		}
@@ -155,7 +153,7 @@ public class BankAccount {
 		}
 	}
 	
-	public int transfer(double transferVal, long accountNumber1) {
+	public int transfer(double transferVal, long accountNumber1) throws IOException {
 		if(transferVal > this.balance) {
 			System.out.println("Cannot transfer greater funds than are in your account");
 			return -1;
@@ -167,7 +165,7 @@ public class BankAccount {
 		else {
 			this.balance = balance - transferVal;
 			db.updateAccount(db.getAccount(accountNumber), db.getAccount(accountNumber1));
-			if(db.getAccount(accountNumber).parseActive() == true) { 
+			if(db.getAccount(accountNumber1) != null) { 
 				balance = balance + transferVal;
 				System.out.println("Transfer to Acct " + accountNumber + " complete.");
 				return 1;

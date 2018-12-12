@@ -28,11 +28,12 @@
 
    The expected inputs for a program like this will understandably vary. It is your responsibility to handle this. Your program needs to be able to handle anything a customer might throw at it. Simply put, it should never crash.
 */
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class ATM {
 
-	Scanner in = new Scanner(System.in);
 	private BankAccount account;
 	private Database db;
 		/**
@@ -41,17 +42,23 @@ public class ATM {
 		 * @param args
 		 */
 		
-	public static void main(String[] args) {		
-//		ATM atm = new ATM(new BankAccount());	
-//		atm.menu();
+	public static void main(String[] args) {
+		ATM atm;
+		try {
+			atm = new ATM();
+			atm.menu();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 			// TODO
 			
 			// you need to start the program by calling some method of the ATM class
 	}
 
 	
-	public ATM(BankAccount account) {
-		this.account = account;
+	public ATM() throws FileNotFoundException, IOException {
+		this.db = new Database("accounts-db.txt");
 	}
 	
 	public BankAccount getAccount() {
@@ -61,49 +68,57 @@ public class ATM {
 		this.account = account;
 	}
 	
-	public void menu() {
+	public void menu() throws IOException {
+		Scanner in = new Scanner(System.in);
 		int exit = 1;
 		System.out.println("Welcome!");
 		do {
 			System.out.println("Available actions include: \n\t 1 - Open Account \n\t 2 - Login\n\t 3 - exit");
 			System.out.println("Please enter the number of the option you are looking for: \n");
 			int options = in.nextInt();
-			
+			in.nextLine();
 			switch(options) {
 				case 1:
 					System.out.println("Please enter your information as prompted now");
 					System.out.println("Please enter your first name: ");
 					String newUserFName = in.nextLine();
 					
-					account.getAccntHolder().setFName(newUserFName);
 					System.out.println("Please enter your last name: ");
 					String newUserLName = in.nextLine();
-					account.getAccntHolder().setLName(newUserLName);
 					System.out.println("Please enter your desired pin: ");
 					int newUserPin = in.nextInt();
-					account.getAccntHolder().setPin(newUserPin);
 					System.out.println("Please enter your date of birth: ");
+					in.nextLine();
 					String newUserDOB = in.nextLine();
-					account.getAccntHolder().setDOB(newUserDOB);
 					System.out.println("Please enter your phone number: ");
 					String newUserPhoneNum = in.nextLine();
-					account.getAccntHolder().setPhoneNum(newUserPhoneNum);
 					System.out.println("Please enter your address: ");
 					String newUserAddy = in.nextLine();
-					account.getAccntHolder().setAddress(newUserAddy);
 					System.out.println("Please enter your city: ");
 					String newUserCity = in.nextLine();
-					account.getAccntHolder().setCity(newUserCity);
 					System.out.println("Please enter your state: ");
 					String newUserState = in.nextLine();
-					account.getAccntHolder().setState(newUserState);
 					System.out.println("Please enter your zip code: ");
 					String newUserZip = in.nextLine();
-					account.getAccntHolder().setZip(newUserZip);
+					in.nextLine();
+					System.out.println("Please enter your initial deposit: ");
+					double nBal = in.nextDouble();
+					in.nextLine();
+					long accountNumN = db.getMaxAccountNumber() + 1;
+					String.format("%09d%04d%15.2f%20s%15s%08d%10d%30s%30s%2s%5s%1s", db.getMaxAccountNumber(), accountNumN, newUserPin, nBal, newUserLName, newUserFName, newUserDOB, newUserPhoneNum, newUserAddy, newUserCity, newUserState, newUserZip, "Y");
 					break;
-//WILL NEED TO ADD NEW USER TO DATABASE WHEN I FIGURE THAT ONE OUT
 				case 2: 
-					exit = 0;
+					System.out.println("What is your account number: \n");
+					long accountNumb = in.nextLong();
+					account = db.getAccount(accountNumb);
+					
+					// account is not null before using it
+					if(account == null) {
+						System.out.println("Account not found. Please try again");
+					}
+					else{
+						exit = 0;
+					}
 					break;
 				case 3:
 					exit = -1;
@@ -113,27 +128,17 @@ public class ATM {
 					break;
 			}
 		}
-		while(exit != 0 || exit != -1);			
+		while(exit != 0 && exit != -1);			
 					
 					
 		if(exit == 0) {			
-			System.out.println("What is your account number: \n");
-			account.setAccountNumber(in.nextLong());
-			System.out.println("Please input your pin to continue, or enter 0 to reset your pin: \n");
+			
+			System.out.println("Please input your pin to continue: \n");
 			int pinCheck = in.nextInt();
-			if(pinCheck == 0) {
-				System.out.println("Please enter your old pin: ");
-				int oldPin = in.nextInt();
-				account.getAccntHolder().modifyPin(oldPin);
-			}
 			while(account.getAccntHolder().getPin() != pinCheck) {
 				System.out.println("Incorrect Pin. Please try again. \n");
-				System.out.println("Please input your pin to continue, or enter 0 to reset your pin: \n");
+				System.out.println("Please input your pin to continue: \n");
 				pinCheck = in.nextInt();
-				if(pinCheck == 0) {
-					System.out.println("Please enter your old pin: ");
-					int oldPin = in.nextInt();
-					account.getAccntHolder().modifyPin(oldPin);
 				}
 			}
 			
@@ -327,9 +332,15 @@ public class ATM {
 							}
 						}
 						while(cancel != -1);
+					case 7:
+						System.out.println("Please confirm you wish to close the account now by entering 1, or enter 0 to cancel: ");
+						int conf = in.nextInt();
+						if(conf == 0) {
+							break;
+						}
 					case 0:
 						System.out.println("Thank you.\n");
-						db.updateAccount(db.getAccount(accountNumber), null);
+						db.updateAccount(db.getAccount(account.getAccountNumber()), null);
 						escape = -1;
 						break;
 					default:
@@ -338,7 +349,7 @@ public class ATM {
 				}
 			}
 			while(escape != -1);
-		}
 		System.out.println("Have a nice day!\n");
+		in.close();
 	}
 }
